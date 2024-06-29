@@ -41,6 +41,7 @@ app.use(compression({
 // Remove the trailing slash if there is any
 
 const allowedOrigins = [
+  "https://wander-whiskers-client.onrender.com",
   "https://www.wander-whiskers.eu",
   "http://www.wander-whiskers.eu",
   "https://wander-whiskers.eu",
