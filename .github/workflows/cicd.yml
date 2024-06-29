@@ -1,0 +1,69 @@
+name: Deploy Node Application
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+      
+    - name: Login to Docker Hub
+      run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      
+    - name: Print current directory content
+      run: ls -l
+      
+    - name: Build Docker Image
+      run: |
+        docker build \
+          --build-arg MONGO_URI=${{ secrets.MONGO_URI }} \
+          --build-arg PORT=${{ secrets.PORT }} \
+          --build-arg SECRET_TOKEN=${{ secrets.SECRET_TOKEN }} \
+          --build-arg ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }} \
+          --build-arg NODEMAILER_EMAIL=${{ secrets.NODEMAILER_EMAIL }} \
+          --build-arg NODEMAILER_PASSWORD=${{ secrets.NODEMAILER_PASSWORD }} \
+          --build-arg SECRET_STRIPE_KEY=${{ secrets.SECRET_STRIPE_KEY }} \
+          --build-arg STRIPE_ANNUAL_SUBSCRIPTION=${{ secrets.STRIPE_ANNUAL_SUBSCRIPTION }} \
+          --build-arg STRIPE_MONTHLY_SUBSCRIPTION=${{ secrets.STRIPE_MONTHLY_SUBSCRIPTION }} \
+          --build-arg CLIENT_URL=${{ secrets.CLIENT_URL }} \
+          --build-arg APP_RESET_PASSWORD_URL=${{ secrets.APP_RESET_PASSWORD_URL }} \
+          --build-arg ENDPOINT_SECRET=${{ secrets.ENDPOINT_SECRET }} \
+          --build-arg CLIENT_URL_SUCCESS=${{ secrets.CLIENT_URL_SUCCESS }} \
+          --build-arg CLIENT_URL_CANCEL=${{ secrets.CLIENT_URL_CANCEL }} \
+          -t davcode46/wander-whiskers-server .
+      
+    - name: Publish Image to Docker Hub
+      run: docker push davcode46/wander-whiskers-server:latest
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+
+    steps:
+    - name: Pull Image from Docker Hub
+      run: sudo docker pull davcode46/wander-whiskers-server:latest
+
+    - name: Remove existing container
+      run: sudo docker rm -f wander-whiskers-server-container || true
+
+    - name: Run Docker Container
+      run: |
+        sudo docker run -d -p 5000:5000 --name wander-whiskers-server-container \
+        -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+        -e PORT="${{ secrets.PORT }}" \
+        -e SECRET_TOKEN="${{ secrets.SECRET_TOKEN }}" \
+        -e ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}" \
+        -e NODEMAILER_EMAIL="${{ secrets.NODEMAILER_EMAIL }}" \
+        -e NODEMAILER_PASSWORD="${{ secrets.NODEMAILER_PASSWORD }}" \
+        -e SECRET_STRIPE_KEY="${{ secrets.SECRET_STRIPE_KEY }}" \
+        -e STRIPE_ANNUAL_SUBSCRIPTION="${{ secrets.STRIPE_ANNUAL_SUBSCRIPTION }}" \
+        -e STRIPE_MONTHLY_SUBSCRIPTION="${{ secrets.STRIPE_MONTHLY_SUBSCRIPTION }}" \
+        -e CLIENT_URL="${{ secrets.CLIENT_URL }}" \
+        -e APP_RESET_PASSWORD_URL="${{ secrets.APP_RESET_PASSWORD_URL }}" \
+        davcode46/wander-whiskers-server:latest
