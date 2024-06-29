@@ -400,20 +400,20 @@ const deleteUser = async (req, res, next) => {
     }
 
     // Encontrar y eliminar todos los posts del usuario
-    const posts = await Post.find({ author: userId });
+    // const posts = await Post.find({ author: userId });
 
     // Eliminar imágenes de los posts en paralelo
-    const deletePostImagesPromises = posts.map(async (post) => {
-      if (post.image) {
-        const imagePath = path.join(__dirname, "..", "uploads", post.image);
-        fs.unlink(imagePath, (err) => {
-          if (err) {
-            console.error(err); // Log the error instead of sending it directly
-          }
-        });
-      }
-    });
-    await Promise.all(deletePostImagesPromises);
+    // const deletePostImagesPromises = posts.map(async (post) => {
+    //   if (post.image) {
+    //     const imagePath = path.join(__dirname, "..", "uploads", post.image);
+    //     fs.unlink(imagePath, (err) => {
+    //       if (err) {
+    //         console.error(err); // Log the error instead of sending it directly
+    //       }
+    //     });
+    //   }
+    // });
+    // await Promise.all(deletePostImagesPromises);
 
     // Eliminar todos los posts del usuario
     await Post.deleteMany({ author: userId });
@@ -422,19 +422,19 @@ const deleteUser = async (req, res, next) => {
     await Cart.findOneAndDelete({ user: userId });
 
     // Eliminar la imagen de perfil asociada si existe
-    if (userToDelete.profileImage) {
-      const profileImagePath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        userToDelete.profileImage
-      );
-      fs.unlink(profileImagePath, (err) => {
-        if (err) {
-          console.error(err); // Log the error instead of sending it directly
-        }
-      });
-    }
+    // if (userToDelete.profileImage) {
+    //   const profileImagePath = path.join(
+    //     __dirname,
+    //     "..",
+    //     "uploads",
+    //     userToDelete.profileImage
+    //   );
+    //   fs.unlink(profileImagePath, (err) => {
+    //     if (err) {
+    //       console.error(err); // Log the error instead of sending it directly
+    //     }
+    //   });
+    // }
 
     // Eliminar el usuario de la base de datos
     await User.findByIdAndDelete(userId);

@@ -19,9 +19,8 @@ const __dirname = dirname(__filename);
 
 const createPost = async (req, res, next) => {
   try {
-    let { title, content, specie, location,image, condition } = req.body;
+    let { title, content, specie, location, image, condition } = req.body;
 
-    console.log('body', req.body)
 
     if (
       !title ||
@@ -208,14 +207,14 @@ const getAuthorPosts = async (req, res, next) => {
 const updatePost = async (req, res, next) => {
   
   try {
-    let imageName;
-    let newImageName;
+    // let imageName;
+    // let newImageName;
     let updatedPost;
     const postId = req.params.id;
-    let { title, content, specie, condition, location } = req.body;
+    let { title, content, specie, image, condition, location } = req.body;
     if (!title || !content || !specie || !condition || !location)
       return next(new ErrorModel("Todos los campos son obligatorios", 422));
-    if (req.files == null) {
+    if (image == null) {
      
       updatedPost = await Post.findByIdAndUpdate(
         postId,
@@ -226,48 +225,65 @@ const updatePost = async (req, res, next) => {
         return next(new ErrorModel("Error al actualizar el post", 422));
       return res.status(200).json(updatedPost);
     } else {
-      const post = await Post.findById(postId);
-      if (req.files && req.user.id == post.author) {
-        fs.unlink(
-          path.join(__dirname, "..", "uploads", post.image),
-          async (err) => {
-            if (err) return next(new ErrorModel(err));
-          }
-        );
+      // const post = await Post.findById(postId);
 
-        const { image } = req.files;
-        if (image.size > 2000000)
-          return next(new ErrorModel("La imagen debe pesar menos de 2MB", 422));
-        imageName = image.name;
-        let splittedImageName = imageName.split(".");
-        newImageName =
-          splittedImageName[0] +
-          uuid() +
-          "." +
-          splittedImageName[splittedImageName.length - 1];
-        image.mv(
-          path.join(__dirname, "..", "uploads", newImageName),
-          async (err) => {
-            if (err) return next(new ErrorModel(err));
-            updatedPost = await Post.findByIdAndUpdate(
-              postId,
-              {
-                title,
-                content,
-                specie,
-                location,
-                condition,
-                image: newImageName,
-              },
-              { new: true }
-            );
+      updatedPost = await Post.findByIdAndUpdate(
+        postId,
+        {
+          title,
+          content,
+          specie,
+          location,
+          condition,
+          image,
+        },
+        { new: true }
+      );
 
-            if (!updatedPost)
-              return next(new ErrorModel("Error al actualizar el post", 422));
-            return res.status(200).json(updatedPost);
-          }
-        );
-      }
+      if (!updatedPost)
+        return next(new ErrorModel("Error al actualizar el post", 422));
+      return res.status(200).json(updatedPost);
+      // if (image && req.user.id == post.author) {
+      //   fs.unlink(
+      //     path.join(__dirname, "..", "uploads", post.image),
+      //     async (err) => {
+      //       if (err) return next(new ErrorModel(err));
+      //     }
+      //   );
+
+        // const { image } = req.files;
+        // if (image.size > 2000000)
+        //   return next(new ErrorModel("La imagen debe pesar menos de 2MB", 422));
+        // imageName = image.name;
+        // let splittedImageName = imageName.split(".");
+        // newImageName =
+        //   splittedImageName[0] +
+        //   uuid() +
+        //   "." +
+        //   splittedImageName[splittedImageName.length - 1];
+        // image.mv(
+        //   path.join(__dirname, "..", "uploads", newImageName),
+        //   async (err) => {
+        //     if (err) return next(new ErrorModel(err));
+        //     updatedPost = await Post.findByIdAndUpdate(
+        //       postId,
+        //       {
+        //         title,
+        //         content,
+        //         specie,
+        //         location,
+        //         condition,
+        //         image: newImageName,
+        //       },
+        //       { new: true }
+        //     );
+
+        //     if (!updatedPost)
+        //       return next(new ErrorModel("Error al actualizar el post", 422));
+        //     return res.status(200).json(updatedPost);
+        //   }
+        // );
+      // }
     }
   } catch (err) {
     next(new ErrorModel(err));
@@ -292,16 +308,16 @@ const deletePost = async (req, res, next) => {
       return next(
         new ErrorModel("No tienes permisos para eliminar este post", 403)
       );
-    if (imageName) {
-      fs.unlink(
-        path.join(__dirname, "..", "uploads", imageName),
-        async (err) => {
-          if (err) {
-            return next(new ErrorModel(err));
-          }
-        }
-      );
-    }
+    // if (imageName) {
+    //   fs.unlink(
+    //     path.join(__dirname, "..", "uploads", imageName),
+    //     async (err) => {
+    //       if (err) {
+    //         return next(new ErrorModel(err));
+    //       }
+    //     }
+    //   );
+    // }
 
     await Post.findByIdAndDelete(postId);
 
